@@ -104,7 +104,7 @@ export default function Sidebar() {
   return (
     <aside className="flex w-64 shrink-0 flex-col border-l border-zinc-800 bg-zinc-950 p-4">
       <h2 className="mb-3 text-sm font-bold tracking-tight text-zinc-300">
-        Angel AI
+        Angel Strategy
       </h2>
 
       {reasoning ? (
@@ -112,8 +112,8 @@ export default function Sidebar() {
       ) : (
         <p className="text-xs text-zinc-600">
           {turnNumber === 0
-            ? "Place a block to start. The AI will respond."
-            : "Waiting for AI move..."}
+            ? "Place a block to start. The angel will respond."
+            : "Waiting for angel move..."}
         </p>
       )}
     </aside>

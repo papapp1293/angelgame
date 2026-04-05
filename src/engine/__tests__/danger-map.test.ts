@@ -5,7 +5,7 @@ import { createGrid, blockCell } from "../grid";
 describe("cellDanger", () => {
   it("returns zero danger for a cell on an empty grid", () => {
     const grid = createGrid();
-    const danger = cellDanger(grid, { x: 3, y: 3 }, { x: 1, y: 0 }, 4);
+    const danger = cellDanger(grid, { x: 3, y: 3 }, { x: 0, y: 0 }, { x: 1, y: 0 }, 4);
     expect(danger).toBe(0);
   });
 
@@ -13,14 +13,14 @@ describe("cellDanger", () => {
     let grid = createGrid();
     const cell = { x: 5, y: 5 };
 
-    const dangerBefore = cellDanger(grid, cell, { x: 1, y: 0 }, 4);
+    const dangerBefore = cellDanger(grid, cell, { x: 5, y: 5 }, { x: 1, y: 0 }, 4);
 
     // Block 3 neighbors
     grid = blockCell(grid, { x: 4, y: 5 });
     grid = blockCell(grid, { x: 5, y: 4 });
     grid = blockCell(grid, { x: 6, y: 5 });
 
-    const dangerAfter = cellDanger(grid, cell, { x: 1, y: 0 }, 4);
+    const dangerAfter = cellDanger(grid, cell, { x: 5, y: 5 }, { x: 1, y: 0 }, 4);
     expect(dangerAfter).toBeGreaterThan(dangerBefore);
   });
 
@@ -29,10 +29,11 @@ describe("cellDanger", () => {
     // Escape vector points right (+x)
     const escapeVec = { x: 1, y: 0 };
 
+    const angelPos = { x: 0, y: 0 };
     // Cell to the left (opposite escape direction)
-    const dangerLeft = cellDanger(grid, { x: -3, y: 0 }, escapeVec, 4);
+    const dangerLeft = cellDanger(grid, { x: -3, y: 0 }, angelPos, escapeVec, 4);
     // Cell to the right (aligned with escape)
-    const dangerRight = cellDanger(grid, { x: 3, y: 0 }, escapeVec, 4);
+    const dangerRight = cellDanger(grid, { x: 3, y: 0 }, angelPos, escapeVec, 4);
 
     // Left should have higher danger (anti-escape penalty)
     expect(dangerLeft).toBeGreaterThan(dangerRight);

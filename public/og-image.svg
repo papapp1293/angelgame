@@ -1,0 +1,43 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="45%" r="40%">
+      <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#0a0a0a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#111111"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- Grid lines -->
+  <g stroke="#1a1a1a" stroke-width="1">
+    <line x1="0" y1="105" x2="1200" y2="105"/>
+    <line x1="0" y1="210" x2="1200" y2="210"/>
+    <line x1="0" y1="315" x2="1200" y2="315"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="525" x2="1200" y2="525"/>
+    <line x1="200" y1="0" x2="200" y2="630"/>
+    <line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="1000" y1="0" x2="1000" y2="630"/>
+  </g>
+  <!-- Blocked cells (devil) -->
+  <rect x="340" y="250" width="50" height="50" rx="6" fill="#8b2020"/>
+  <rect x="450" y="195" width="50" height="50" rx="6" fill="#8b2020"/>
+  <rect x="560" y="360" width="50" height="50" rx="6" fill="#8b2020"/>
+  <rect x="670" y="250" width="50" height="50" rx="6" fill="#8b2020"/>
+  <rect x="505" y="140" width="50" height="50" rx="6" fill="#8b2020"/>
+  <rect x="395" y="360" width="50" height="50" rx="6" fill="#8b2020"/>
+  <rect x="725" y="360" width="50" height="50" rx="6" fill="#8b2020"/>
+  <!-- Glow -->
+  <ellipse cx="570" cy="290" rx="200" ry="150" fill="url(#glow)"/>
+  <!-- Angel -->
+  <circle cx="570" cy="290" r="22" fill="#fbbf24"/>
+  <circle cx="570" cy="290" r="30" fill="none" stroke="#fbbf24" stroke-opacity="0.4" stroke-width="3"/>
+  <!-- Title -->
+  <text x="600" y="520" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="bold" fill="#ededed" text-anchor="middle">Angel vs Devil</text>
+  <text x="600" y="560" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#a1a1aa" text-anchor="middle">Can you trap an angel that can fly?</text>
+</svg>

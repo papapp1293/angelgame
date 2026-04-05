@@ -22,7 +22,7 @@ interface GameCanvasProps {
 }
 
 export default function GameCanvas({ showHeatmap = false }: GameCanvasProps) {
-  const { handleCellClick } = useGameLoop("ai");
+  const { handleCellClick } = useGameLoop("auto");
   const { canvasRef, size } = useCanvas();
   const vpRef = useRef<Viewport>({ offsetX: 0, offsetY: 0, zoom: 1 });
   const hoverRef = useRef<{ x: number; y: number } | null>(null);
@@ -142,15 +142,6 @@ export default function GameCanvas({ showHeatmap = false }: GameCanvasProps) {
       cancelAnimationFrame(rafRef.current);
     };
   }, [doRender]);
-
-  // Re-render on store changes (ensures immediate response to state changes)
-  useEffect(() => {
-    const unsub = useGameStore.subscribe(() => {
-      // The animation loop handles rendering, but we want to ensure
-      // state changes are picked up on the next frame
-    });
-    return unsub;
-  }, []);
 
   // Re-render when heatmap toggle changes
   useEffect(() => {

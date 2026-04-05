@@ -15,11 +15,11 @@ const STEPS = [
   },
   {
     title: "The Angel Flies",
-    body: "After you block a cell, the AI Angel jumps to any cell within its power range (Chebyshev distance). A power-2 Angel can reach any cell within a 5\u00d75 area. Higher power means longer jumps.",
+    body: "After you block a cell, the angel jumps to any cell within its power range (Chebyshev distance). A power-2 angel can reach any cell within a 5\u00d75 area. Higher power means longer jumps.",
   },
   {
     title: "Can You Win?",
-    body: "Mathematically, a power-2+ Angel can always escape. But the AI isn\u2019t perfect \u2014 with clever blocking you might trap it. Place blocks to form barriers and corner the Angel. Good luck!",
+    body: "Mathematically, a power-2+ angel can always escape. But the algorithm isn\u2019t perfect \u2014 with clever blocking you might trap it. Place blocks to form barriers and corner the angel. Good luck!",
   },
 ] as const;
 
@@ -58,6 +58,15 @@ export default function TutorialModal({ forceOpen, onClose }: TutorialModalProps
     onClose?.();
   }, [onClose]);
 
+  useEffect(() => {
+    if (!visible) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [visible, close]);
+
   if (!visible) return null;
 
   const current = STEPS[step];
@@ -65,7 +74,7 @@ export default function TutorialModal({ forceOpen, onClose }: TutorialModalProps
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="mx-4 w-full max-w-md rounded-lg border border-zinc-700 bg-zinc-900 p-6 shadow-2xl">
+      <div role="dialog" aria-modal="true" aria-label="Tutorial" className="mx-4 w-full max-w-md rounded-lg border border-zinc-700 bg-zinc-900 p-6 shadow-2xl">
         {/* Step indicator */}
         <div className="mb-4 flex gap-1.5">
           {STEPS.map((_, i) => (

@@ -23,14 +23,6 @@ export function getValidAngelMoves(state: GameState): Coord[] {
   );
 }
 
-export function getValidDevilTargets(state: GameState): (coord: Coord) => boolean {
-  return (coord: Coord) => {
-    if (isBlocked(state.grid, coord)) return false;
-    if (coord.x === state.angelPos.x && coord.y === state.angelPos.y) return false;
-    return true;
-  };
-}
-
 export function applyDevilMove(state: GameState, coord: Coord): GameState {
   if (state.phase !== "devil-turn") {
     throw new Error(`Cannot apply devil move during phase: ${state.phase}`);

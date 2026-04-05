@@ -3,6 +3,7 @@ import { countBlockedInRange } from "./grid";
 import {
   coordKey,
   coordsInRange,
+  subtractCoords,
   normalizeVector,
   dotProduct,
 } from "@/lib/math";
@@ -23,6 +24,7 @@ export interface DangerEntry {
 export function cellDanger(
   grid: SparseGrid,
   cell: Coord,
+  angelPos: Coord,
   escapeVector: Coord,
   dangerRadius: number
 ): number {
@@ -34,17 +36,20 @@ export function cellDanger(
   const wideArea = (2 * dangerRadius + 1) ** 2;
   const density = wideBlocked / wideArea;
 
-  // 3. Confinement: count blocked in radius 2 (24 surrounding cells + center area)
+  // 3. Confinement: fraction of blocked cells in a 5x5 area (radius 2)
   const nearBlocked = countBlockedInRange(grid, cell, 2);
   const nearArea = 25; // 5x5
   const confinement = nearBlocked / nearArea;
 
-  // 4. Anti-escape: if escapeVector is non-zero, penalize moves opposite to it
+  // 4. Anti-escape: penalize cells that move toward the blocked centroid (opposite to escape)
   let antiEscape = 0;
   if (escapeVector.x !== 0 || escapeVector.y !== 0) {
-    const cellDir = normalizeVector(cell);
-    antiEscape = -dotProduct(cellDir, escapeVector); // negative dot = opposite direction
-    antiEscape = Math.max(0, antiEscape); // only penalize, don't reward
+    const toCell = subtractCoords(cell, angelPos);
+    const cellDir = normalizeVector(toCell);
+    if (cellDir.x !== 0 || cellDir.y !== 0) {
+      antiEscape = -dotProduct(cellDir, escapeVector); // negative dot = opposite direction
+      antiEscape = Math.max(0, antiEscape); // only penalize, don't reward
+    }
   }
 
   // Weighted sum (tuned for gameplay feel)
@@ -74,7 +79,7 @@ export function computeDangerMap(
     if (grid.has(coordKey(coord))) continue;
     if (coord.x === angelPos.x && coord.y === angelPos.y) continue;
 
-    const danger = cellDanger(grid, coord, escapeVector, dangerRadius);
+    const danger = cellDanger(grid, coord, angelPos, escapeVector, dangerRadius);
     entries.push({ coord, danger });
   }
 

@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Angel vs Devil
 
-## Getting Started
+A browser game based on [Conway's Angel Problem](https://en.wikipedia.org/wiki/Angel_problem) — a famous puzzle in combinatorial game theory.
 
-First, run the development server:
+The angel sits at the origin of an infinite 2D grid. Each turn you (the Devil) block one cell. The angel then leaps to any unblocked cell within its power range (Chebyshev distance). For power ≥ 2, the angel has a mathematically proven winning strategy — but can you outsmart the algorithm?
+
+## Play
+
+Visit the hosted version or run locally:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How It Works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **You are the Devil.** Click any empty cell to block it permanently.
+- **The Angel is automated.** After each block, the angel computes an escape move using heuristic scoring, danger maps, and minimax lookahead — all running in a Web Worker.
+- **Infinite grid.** Pan (drag) and zoom (scroll) freely. Only blocked cells use memory.
+- **Win condition.** If the angel has no valid moves, you win. If it survives 200 turns, it wins.
 
-## Learn More
+## Features
 
-To learn more about Next.js, take a look at the following resources:
+- Hybrid strategy engine: escape vectors, flood-fill freedom scoring, minimax lookahead
+- Danger heatmap overlay showing evaluated cell scores
+- Strategy reasoning sidebar with move candidates and compute time
+- Smooth canvas animations (angel lerp, block flash, glow pulse)
+- Configurable angel power (1–4) and difficulty (easy/medium/hard)
+- Tutorial walkthrough for first-time visitors
+- Fully client-side — no server, no API calls
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Static Export
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The game exports as a static site:
 
-## Deploy on Vercel
+```bash
+npm run build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Output goes to `out/`. Serve it with any static file server or embed it into an existing site.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Stack
+
+- **Next.js 15** (App Router, static export)
+- **TypeScript** (strict)
+- **HTML5 Canvas** (grid rendering, animations)
+- **Zustand** (state management)
+- **Web Worker** (angel computation off main thread)
+- **Tailwind CSS** (UI styling)
+- **Vitest** (testing)
+
+## Tests
+
+```bash
+npm test
+```
+
+Covers grid operations, game logic, angel strategy, and danger map evaluation.
+
+## Project Structure
+
+```
+src/
+├── app/           # Next.js pages and layout
+├── components/    # Canvas, HUD, sidebar, tutorial, settings
+├── engine/        # Game logic, angel strategy, danger maps, worker
+├── store/         # Zustand game store
+├── hooks/         # Canvas, game loop, worker lifecycle
+└── lib/           # Constants, math utilities
+```
+
+## License
+
+MIT

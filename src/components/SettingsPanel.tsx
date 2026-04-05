@@ -1,10 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import { useGameStore } from "@/store/game-store";
 import type { Difficulty } from "@/engine/types";
 
 const DIFFICULTIES: { value: Difficulty; label: string; desc: string }[] = [
-  { value: "easy", label: "Easy", desc: "No lookahead \u2014 Angel reacts only" },
+  { value: "easy", label: "Easy", desc: "No lookahead \u2014 angel reacts only" },
   { value: "medium", label: "Medium", desc: "1-step lookahead" },
   { value: "hard", label: "Hard", desc: "2-step lookahead" },
 ];
@@ -22,11 +23,23 @@ export default function SettingsPanel({ open, onClose, onShowTutorial }: Setting
   const setDifficulty = useGameStore((s) => s.setDifficulty);
   const resetGame = useGameStore((s) => s.resetGame);
 
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [open, onClose]);
+
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={onClose}>
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Settings"
         className="mx-4 w-full max-w-sm rounded-lg border border-zinc-700 bg-zinc-900 p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -34,6 +47,7 @@ export default function SettingsPanel({ open, onClose, onShowTutorial }: Setting
           <h2 className="text-lg font-bold text-zinc-100">Settings</h2>
           <button
             onClick={onClose}
+            aria-label="Close settings"
             className="text-zinc-500 transition-colors hover:text-zinc-300"
           >
             &times;
@@ -69,7 +83,7 @@ export default function SettingsPanel({ open, onClose, onShowTutorial }: Setting
         {/* Difficulty */}
         <div className="mb-5">
           <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            AI Difficulty
+            Difficulty
           </label>
           <div className="space-y-1.5">
             {DIFFICULTIES.map((d) => (

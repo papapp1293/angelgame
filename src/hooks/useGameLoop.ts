@@ -6,7 +6,7 @@ import { useWorker } from "@/hooks/useWorker";
 import type { Coord, WorkerResponse } from "@/engine/types";
 import { chebyshevDistance } from "@/lib/math";
 
-type AngelMode = "manual" | "ai";
+type AngelMode = "manual" | "auto";
 
 export function useGameLoop(mode: AngelMode = "manual") {
   const phase = useGameStore((s) => s.phase);
@@ -22,9 +22,9 @@ export function useGameLoop(mode: AngelMode = "manual") {
 
   const { requestMove } = useWorker(onWorkerResult);
 
-  // In AI mode, dispatch to worker when it's the angel's turn
+  // In auto mode, dispatch to worker when it's the angel's turn
   useEffect(() => {
-    if (mode === "ai" && phase === "angel-thinking") {
+    if (mode === "auto" && phase === "angel-thinking") {
       const s = useGameStore.getState();
       requestMove(s.grid, s.angelPos, s.angelPower, s.turnNumber, s.difficulty);
     }

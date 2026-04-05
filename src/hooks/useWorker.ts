@@ -11,7 +11,7 @@ import type {
 } from "@/engine/types";
 
 interface UseWorkerReturn {
-  /** Send game state to the worker for AI computation. */
+  /** Send game state to the worker for move computation. */
   requestMove: (
     grid: SparseGrid,
     angelPos: Coord,
@@ -26,7 +26,7 @@ interface UseWorkerReturn {
 }
 
 /**
- * Manages the Angel AI Web Worker lifecycle.
+ * Manages the Angel strategy Web Worker lifecycle.
  * Creates the worker on mount, terminates on unmount.
  * Calls onResult when the worker returns a move.
  */

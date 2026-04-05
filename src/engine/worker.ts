@@ -4,7 +4,7 @@ import type { GameState } from "./types";
 
 /**
  * Web Worker entry point.
- * Receives serialized game state, runs the AI strategy, returns the best move.
+ * Receives serialized game state, runs the angel strategy, returns the best move.
  */
 self.onmessage = (e: MessageEvent<WorkerRequest>) => {
   const req = e.data;
