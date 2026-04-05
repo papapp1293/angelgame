@@ -22,11 +22,15 @@ self.onmessage = (e: MessageEvent<WorkerRequest>) => {
     phase: "angel-thinking",
   };
 
-  // Determine lookahead depth based on turn progression
-  // Early game: deeper lookahead is cheap (few blocks).
-  // Late game: keep depth low to stay fast.
+  // Base depth from difficulty setting
+  const depthByDifficulty = { easy: 0, medium: 1, hard: 2 } as const;
+  const baseDepth = depthByDifficulty[req.difficulty ?? "medium"];
+
+  // Scale down in late game to stay fast
   const blockCount = grid.size;
-  const lookaheadDepth = blockCount < 15 ? 2 : blockCount < 40 ? 1 : 0;
+  const lookaheadDepth = blockCount >= 40 ? Math.min(baseDepth, 0)
+    : blockCount >= 15 ? Math.min(baseDepth, 1)
+    : baseDepth;
 
   const { move, reasoning } = computeAngelMove(state, lookaheadDepth);
 

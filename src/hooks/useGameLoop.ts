@@ -26,7 +26,7 @@ export function useGameLoop(mode: AngelMode = "manual") {
   useEffect(() => {
     if (mode === "ai" && phase === "angel-thinking") {
       const s = useGameStore.getState();
-      requestMove(s.grid, s.angelPos, s.angelPower, s.turnNumber);
+      requestMove(s.grid, s.angelPos, s.angelPower, s.turnNumber, s.difficulty);
     }
   }, [mode, phase, requestMove]);
 

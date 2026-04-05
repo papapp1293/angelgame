@@ -37,12 +37,15 @@ export interface AngelReasoning {
   computeTimeMs: number;
 }
 
+export type Difficulty = "easy" | "medium" | "hard";
+
 export interface WorkerRequest {
   type: "compute-move";
   grid: [string, CellState][];
   angelPos: Coord;
   angelPower: number;
   turnNumber: number;
+  difficulty: Difficulty;
 }
 
 export interface WorkerResponse {

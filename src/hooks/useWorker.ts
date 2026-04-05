@@ -7,6 +7,7 @@ import type {
   CellState,
   SparseGrid,
   Coord,
+  Difficulty,
 } from "@/engine/types";
 
 interface UseWorkerReturn {
@@ -15,7 +16,8 @@ interface UseWorkerReturn {
     grid: SparseGrid,
     angelPos: Coord,
     angelPower: number,
-    turnNumber: number
+    turnNumber: number,
+    difficulty: Difficulty
   ) => void;
   /** Whether the worker is currently computing. */
   busy: boolean;
@@ -65,7 +67,8 @@ export function useWorker(
       grid: SparseGrid,
       angelPos: Coord,
       angelPower: number,
-      turnNumber: number
+      turnNumber: number,
+      difficulty: Difficulty
     ) => {
       const worker = workerRef.current;
       if (!worker || busyRef.current) return;
@@ -81,6 +84,7 @@ export function useWorker(
         angelPos,
         angelPower,
         turnNumber,
+        difficulty,
       };
 
       worker.postMessage(request);

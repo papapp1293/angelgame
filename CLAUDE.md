@@ -10,8 +10,9 @@
 **Step 6: COMPLETE** — Web Worker integration  
 **Step 7: COMPLETE** — AI reasoning sidebar and heatmap visualization  
 **Step 8: COMPLETE** — Visual polish and animations  
-**Step 9: NEXT** — Tutorial, onboarding, and game configuration  
-Steps 10-12: Not started
+**Step 9: COMPLETE** — Tutorial, onboarding, and game configuration  
+**Step 10: NEXT** — Performance optimization and edge cases  
+Steps 11-12: Not started
 
 ---
 
@@ -195,8 +196,17 @@ Each step is a self-contained, commit-worthy unit. Start a new window per step.
 - CSS: custom scrollbar, selection color, smooth panel transitions
 - New constants: `gridLineAxis`, `blockedInner`, `blockedFlash`, `angelGlowStrong`, `origin`, `glowPulseSpeed`
 
-### Step 9: Tutorial, Onboarding, and Game Configuration
-**Create:** `src/components/TutorialModal.tsx`, `src/components/SettingsPanel.tsx`
+### Step 9: Tutorial, Onboarding, and Game Configuration ✅
+**Created:** `src/components/TutorialModal.tsx`, `src/components/SettingsPanel.tsx`
+**Modified:** `src/engine/types.ts`, `src/store/game-store.ts`, `src/engine/worker.ts`, `src/hooks/useWorker.ts`, `src/hooks/useGameLoop.ts`, `src/app/page.tsx`
+
+- `TutorialModal.tsx`: 4-step onboarding walkthrough (Angel Problem concept, Devil role, Angel mechanics, win condition). Shown on first visit via localStorage. Step progress indicator, back/next/skip navigation. Can be reopened from settings.
+- `SettingsPanel.tsx`: Modal with angel power selector (1-4), AI difficulty picker (easy/medium/hard), "View Tutorial" link, "New Game" button. Backdrop click to dismiss.
+- `types.ts`: Added `Difficulty` type ("easy" | "medium" | "hard"), added `difficulty` field to `WorkerRequest`
+- `game-store.ts`: Added `difficulty` state and `setDifficulty` action
+- `worker.ts`: Uses difficulty from request to set base lookahead depth, with late-game scaling
+- `useWorker.ts` / `useGameLoop.ts`: Pass difficulty through worker protocol
+- `page.tsx`: Added Settings button to header, wired TutorialModal and SettingsPanel
 
 ### Step 10: Performance Optimization and Edge Cases
 **Modify:** `angel-strategy.ts`, `GridRenderer.ts`, `game.ts`

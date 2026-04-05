@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Coord, GameState, AngelReasoning } from "@/engine/types";
+import type { Coord, GameState, AngelReasoning, Difficulty } from "@/engine/types";
 import {
   initGame,
   applyDevilMove,
@@ -10,12 +10,14 @@ import { DEFAULT_ANGEL_POWER } from "@/lib/constants";
 
 interface GameStore extends GameState {
   reasoning: AngelReasoning | null;
+  difficulty: Difficulty;
 
   // Actions
   devilMove: (coord: Coord) => void;
   angelMove: (coord: Coord, reasoning?: AngelReasoning) => void;
   resetGame: (angelPower?: number) => void;
   setAngelPower: (k: number) => void;
+  setDifficulty: (d: Difficulty) => void;
 
   // Derived
   getValidAngelMoves: () => Coord[];
@@ -28,6 +30,7 @@ export const useGameStore = create<GameStore>((set, get) => {
   return {
     ...initial,
     reasoning: null,
+    difficulty: "medium" as Difficulty,
 
     devilMove: (coord: Coord) => {
       const state = get();
@@ -86,6 +89,10 @@ export const useGameStore = create<GameStore>((set, get) => {
         ...next,
         reasoning: null,
       });
+    },
+
+    setDifficulty: (d: Difficulty) => {
+      set({ difficulty: d });
     },
 
     getValidAngelMoves: () => {
