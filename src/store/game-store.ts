@@ -108,7 +108,8 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
 
     isGameOver: () => {
-      return get().phase === "devil-wins";
+      const phase = get().phase;
+      return phase === "devil-wins" || phase === "angel-wins";
     },
   };
 });

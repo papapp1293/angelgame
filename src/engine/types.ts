@@ -13,7 +13,8 @@ export type GamePhase =
   | "devil-turn"
   | "angel-thinking"
   | "angel-moved"
-  | "devil-wins";
+  | "devil-wins"
+  | "angel-wins";
 
 export interface MoveRecord {
   angel: Coord;

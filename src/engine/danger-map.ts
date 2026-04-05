@@ -1,10 +1,8 @@
 import type { Coord, SparseGrid } from "./types";
-import { isBlocked, countBlockedInRange } from "./grid";
+import { countBlockedInRange } from "./grid";
 import {
   coordKey,
   coordsInRange,
-  chebyshevDistance,
-  subtractCoords,
   normalizeVector,
   dotProduct,
 } from "@/lib/math";
@@ -73,7 +71,7 @@ export function computeDangerMap(
 
   for (const coord of reachable) {
     // Skip blocked cells and current position
-    if (isBlocked(grid, coord)) continue;
+    if (grid.has(coordKey(coord))) continue;
     if (coord.x === angelPos.x && coord.y === angelPos.y) continue;
 
     const danger = cellDanger(grid, coord, escapeVector, dangerRadius);
@@ -95,23 +93,25 @@ export function floodFillFreedom(
   const visited = new Set<string>();
   const queue: Coord[] = [start];
   visited.add(coordKey(start));
+  let head = 0;
   let count = 0;
 
-  while (queue.length > 0) {
-    const current = queue.shift()!;
+  while (head < queue.length) {
+    const current = queue[head++];
     count++;
 
     // Expand to 8 neighbors
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
         if (dx === 0 && dy === 0) continue;
-        const neighbor = { x: current.x + dx, y: current.y + dy };
-        const key = coordKey(neighbor);
+        const nx = current.x + dx;
+        const ny = current.y + dy;
+        const key = `${nx},${ny}`;
         if (visited.has(key)) continue;
-        if (chebyshevDistance(start, neighbor) > maxRadius) continue;
-        if (isBlocked(grid, neighbor)) continue;
+        if (Math.max(Math.abs(nx - start.x), Math.abs(ny - start.y)) > maxRadius) continue;
+        if (grid.has(key)) continue;
         visited.add(key);
-        queue.push(neighbor);
+        queue.push({ x: nx, y: ny });
       }
     }
   }

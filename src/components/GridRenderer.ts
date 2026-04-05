@@ -174,9 +174,11 @@ export function render(
   // Angel (with animation)
   drawAngel(ctx, vp, state, cellPx);
 
-  // Devil-wins overlay
+  // Game-over overlay
   if (state.phase === "devil-wins") {
-    drawWinOverlay(ctx, canvasW, canvasH);
+    drawWinOverlay(ctx, canvasW, canvasH, "devil");
+  } else if (state.phase === "angel-wins") {
+    drawWinOverlay(ctx, canvasW, canvasH, "angel");
   }
 }
 
@@ -190,27 +192,39 @@ function drawGridLines(
 ) {
   ctx.lineWidth = 1;
 
-  // Vertical lines
+  // Batch normal grid lines into a single path, draw axis lines separately
+  ctx.beginPath();
+  ctx.strokeStyle = COLORS.gridLine;
   for (let gx = range.minX; gx <= range.maxX; gx++) {
+    if (gx === 0) continue;
     const sx = gx * cellPx + vp.offsetX;
     if (sx < -1 || sx > canvasW + 1) continue;
-    ctx.strokeStyle = gx === 0 ? COLORS.gridLineAxis : COLORS.gridLine;
-    ctx.beginPath();
     ctx.moveTo(sx, 0);
     ctx.lineTo(sx, canvasH);
-    ctx.stroke();
   }
-
-  // Horizontal lines
   for (let gy = range.minY; gy <= range.maxY; gy++) {
+    if (gy === 0) continue;
     const sy = -gy * cellPx + vp.offsetY;
     if (sy < -1 || sy > canvasH + 1) continue;
-    ctx.strokeStyle = gy === 0 ? COLORS.gridLineAxis : COLORS.gridLine;
-    ctx.beginPath();
     ctx.moveTo(0, sy);
     ctx.lineTo(canvasW, sy);
-    ctx.stroke();
   }
+  ctx.stroke();
+
+  // Axis lines (brighter)
+  ctx.beginPath();
+  ctx.strokeStyle = COLORS.gridLineAxis;
+  const axisX = vp.offsetX;
+  if (axisX >= -1 && axisX <= canvasW + 1) {
+    ctx.moveTo(axisX, 0);
+    ctx.lineTo(axisX, canvasH);
+  }
+  const axisY = vp.offsetY;
+  if (axisY >= -1 && axisY <= canvasH + 1) {
+    ctx.moveTo(0, axisY);
+    ctx.lineTo(canvasW, axisY);
+  }
+  ctx.stroke();
 }
 
 function drawOriginMarker(
@@ -292,16 +306,16 @@ function drawReachableCells(
 ) {
   const { angelPos, angelPower, grid } = state;
   const cornerR = Math.max(2, cellPx * 0.08);
+  const size = cellPx - 2;
   ctx.fillStyle = COLORS.reachable;
 
   for (let dx = -angelPower; dx <= angelPower; dx++) {
     for (let dy = -angelPower; dy <= angelPower; dy++) {
       if (dx === 0 && dy === 0) continue;
-      const c = { x: angelPos.x + dx, y: angelPos.y + dy };
-      const key = `${c.x},${c.y}`;
-      if (grid.has(key)) continue;
-      const { sx, sy } = gridToScreen(c, vp);
-      roundRect(ctx, sx + 1, sy + 1, cellPx - 2, cellPx - 2, cornerR);
+      if (grid.has(`${angelPos.x + dx},${angelPos.y + dy}`)) continue;
+      const sx = (angelPos.x + dx) * cellPx + vp.offsetX + 1;
+      const sy = -(angelPos.y + dy) * cellPx + vp.offsetY + 1;
+      roundRect(ctx, sx, sy, size, size, cornerR);
       ctx.fill();
     }
   }
@@ -419,7 +433,8 @@ function drawAngel(
 function drawWinOverlay(
   ctx: CanvasRenderingContext2D,
   canvasW: number,
-  canvasH: number
+  canvasH: number,
+  winner: "devil" | "angel"
 ) {
   // Semi-transparent dark overlay
   ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
@@ -431,18 +446,24 @@ function drawWinOverlay(
   ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
   ctx.fillRect(0, bannerY, canvasW, bannerH);
 
+  const accentColor = winner === "devil" ? "#22c55e" : "#fbbf24";
+  const title = winner === "devil" ? "DEVIL WINS" : "ANGEL ESCAPES";
+  const subtitle = winner === "devil"
+    ? "The angel is trapped. Click Reset to play again."
+    : "The angel survived! Click Reset to try again.";
+
   // Top border accent
-  ctx.fillStyle = "#22c55e";
+  ctx.fillStyle = accentColor;
   ctx.fillRect(0, bannerY, canvasW, 2);
 
   // Text
-  ctx.fillStyle = "#22c55e";
+  ctx.fillStyle = accentColor;
   ctx.font = "bold 28px sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("DEVIL WINS", canvasW / 2, canvasH / 2 - 8);
+  ctx.fillText(title, canvasW / 2, canvasH / 2 - 8);
 
   ctx.fillStyle = "#a1a1aa";
   ctx.font = "14px sans-serif";
-  ctx.fillText("The angel is trapped. Click Reset to play again.", canvasW / 2, canvasH / 2 + 20);
+  ctx.fillText(subtitle, canvasW / 2, canvasH / 2 + 20);
 }

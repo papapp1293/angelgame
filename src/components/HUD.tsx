@@ -9,6 +9,7 @@ const PHASE_LABEL: Record<GamePhase, string> = {
   "angel-thinking": "Angel is thinking...",
   "angel-moved": "Angel moved",
   "devil-wins": "You win! The angel is trapped",
+  "angel-wins": "Angel escaped! It survived all turns",
 };
 
 export default function HUD() {
@@ -27,9 +28,11 @@ export default function HUD() {
         className={
           phase === "devil-wins"
             ? "font-semibold text-green-400"
-            : phase === "devil-turn"
-              ? "text-red-400"
-              : "text-amber-400"
+            : phase === "angel-wins"
+              ? "font-semibold text-amber-400"
+              : phase === "devil-turn"
+                ? "text-red-400"
+                : "text-amber-400"
         }
       >
         {PHASE_LABEL[phase]}

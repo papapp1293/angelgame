@@ -1,5 +1,5 @@
 import type { Coord, GameState, AngelReasoning } from "./types";
-import { isBlocked, getBlockedCells, countBlockedInRange } from "./grid";
+import { isBlocked, countBlockedInRange } from "./grid";
 import { getValidAngelMoves, applyAngelMove, applyDevilMove } from "./game";
 import { computeDangerMap, floodFillFreedom } from "./danger-map";
 import {
@@ -16,61 +16,56 @@ interface ScoredMove {
   score: number;
 }
 
-/**
- * Compute the escape vector: direction away from the centroid of all blocked cells.
- * If no cells are blocked, defaults to moving away from origin (or {1,0} as fallback).
- */
-export function computeEscapeVector(
-  grid: GameState["grid"],
-  angelPos: Coord
-): Coord {
-  const blocked = getBlockedCells(grid);
-  if (blocked.length === 0) {
-    // No blocks yet — any direction is fine
-    return { x: 1, y: 0 };
-  }
+/** Precomputed context to avoid redundant work across scoreCandidate calls. */
+interface ScoringContext {
+  escapeVector: Coord;
+  centroid: Coord | null;
+}
 
-  // Compute centroid of blocked cells
+/**
+ * Compute the blocked centroid. Returns null if no blocked cells.
+ */
+function computeBlockedCentroid(grid: GameState["grid"]): Coord | null {
+  if (grid.size === 0) return null;
   let cx = 0;
   let cy = 0;
-  for (const b of blocked) {
-    cx += b.x;
-    cy += b.y;
+  for (const key of grid.keys()) {
+    const comma = key.indexOf(",");
+    cx += +key.slice(0, comma);
+    cy += +key.slice(comma + 1);
   }
-  cx /= blocked.length;
-  cy /= blocked.length;
+  return { x: cx / grid.size, y: cy / grid.size };
+}
 
-  const centroid = { x: cx, y: cy };
+/**
+ * Compute the escape vector: direction away from the centroid of all blocked cells.
+ */
+export function computeEscapeVector(
+  centroid: Coord | null,
+  angelPos: Coord
+): Coord {
+  if (!centroid) return { x: 1, y: 0 };
+
   const away = subtractCoords(angelPos, centroid);
-
-  // If angel is exactly on the centroid, pick a direction based on closest block
-  if (away.x === 0 && away.y === 0) {
-    return { x: 1, y: 0 };
-  }
+  if (away.x === 0 && away.y === 0) return { x: 1, y: 0 };
 
   return normalizeVector(away);
 }
 
 /**
  * Score a candidate move. Higher score = better for the angel.
- *
- * Factors:
- * 1. Escape alignment: how well the move aligns with the escape vector
- * 2. Freedom: flood-fill reachable cells from destination
- * 3. Low local danger: fewer blocked neighbors
- * 4. Distance from blocked centroid
  */
 export function scoreCandidate(
   grid: GameState["grid"],
   angelPos: Coord,
   candidate: Coord,
-  escapeVector: Coord,
+  ctx: ScoringContext,
   angelPower: number
 ): number {
-  // 1. Escape alignment (dot product of move direction with escape vector)
+  // 1. Escape alignment
   const moveDir = subtractCoords(candidate, angelPos);
   const moveDirNorm = normalizeVector(moveDir);
-  const alignment = dotProduct(moveDirNorm, escapeVector);
+  const alignment = dotProduct(moveDirNorm, ctx.escapeVector);
 
   // 2. Freedom score (flood fill within a radius)
   const freedom = floodFillFreedom(grid, candidate, angelPower + 2);
@@ -81,17 +76,11 @@ export function scoreCandidate(
   const localBlocked = countBlockedInRange(grid, candidate, 1);
 
   // 4. Distance from blocked centroid
-  const blocked = getBlockedCells(grid);
   let centroidDist = 0;
-  if (blocked.length > 0) {
-    let cx = 0, cy = 0;
-    for (const b of blocked) { cx += b.x; cy += b.y; }
-    cx /= blocked.length;
-    cy /= blocked.length;
-    centroidDist = magnitude(subtractCoords(candidate, { x: cx, y: cy }));
+  if (ctx.centroid) {
+    centroidDist = magnitude(subtractCoords(candidate, ctx.centroid));
   }
 
-  // Weighted combination
   return (
     alignment * 4.0 +
     freedomRatio * 10.0 +
@@ -102,74 +91,73 @@ export function scoreCandidate(
 
 /**
  * Minimax lookahead: simulate devil placing the worst block, angel responding optimally.
- * Returns the worst-case score for the angel from this position.
  */
 function minimax(
   state: GameState,
-  escapeVector: Coord,
+  ctx: ScoringContext,
   depth: number,
   isDevilTurn: boolean
 ): number {
   if (depth === 0 || state.phase === "devil-wins") {
     if (state.phase === "devil-wins") return -1000;
-    // Evaluate current angel position
     return scoreCandidate(
       state.grid,
       state.angelPos,
       state.angelPos,
-      escapeVector,
+      ctx,
       state.angelPower
     );
   }
 
   if (isDevilTurn) {
-    // Devil picks the move that minimizes angel's score
-    // Only consider nearby cells to keep computation tractable
     const angelMoves = getValidAngelMoves(state);
     if (angelMoves.length === 0) return -1000;
 
-    // Devil blocks near the angel to be strategically relevant
-    const devilCandidates: Coord[] = [];
+    // Devil blocks near the angel — score candidates by threat level
     const r = state.angelPower + 2;
+    const devilCandidates: { coord: Coord; threat: number }[] = [];
     for (let dx = -r; dx <= r; dx++) {
       for (let dy = -r; dy <= r; dy++) {
         const coord = { x: state.angelPos.x + dx, y: state.angelPos.y + dy };
         if (!isBlocked(state.grid, coord) &&
             !(coord.x === state.angelPos.x && coord.y === state.angelPos.y)) {
-          devilCandidates.push(coord);
+          // Threat = closeness to angel + blocks nearby (walls are good for devil)
+          const dist = chebyshevDistance(state.angelPos, coord);
+          const nearbyBlocks = countBlockedInRange(state.grid, coord, 1);
+          const threat = (r - dist) * 2 + nearbyBlocks * 3;
+          devilCandidates.push({ coord, threat });
         }
       }
     }
 
-    // Sample devil moves to keep it tractable (worst of top threats)
-    const sample = devilCandidates.slice(0, 12);
+    // Pick the most threatening devil moves
+    devilCandidates.sort((a, b) => b.threat - a.threat);
+    const sample = devilCandidates.slice(0, 10);
     let worstScore = Infinity;
 
-    for (const devilMove of sample) {
+    for (const { coord: devilMove } of sample) {
       try {
         const nextState = applyDevilMove(
           { ...state, phase: "devil-turn" },
           devilMove
         );
-        const score = minimax(nextState, escapeVector, depth - 1, false);
+        const score = minimax(nextState, ctx, depth - 1, false);
         worstScore = Math.min(worstScore, score);
       } catch {
-        continue; // Invalid move, skip
+        continue;
       }
     }
 
     return worstScore === Infinity ? 0 : worstScore;
   } else {
-    // Angel picks the best move
     const moves = getValidAngelMoves(state);
     if (moves.length === 0) return -1000;
 
     let bestScore = -Infinity;
-    // Only evaluate top 5 candidates by static score
     const scored = moves
       .map((m) => ({
         coord: m,
-        score: scoreCandidate(state.grid, state.angelPos, m, escapeVector, state.angelPower),
+        score: scoreCandidate(state.grid, state.angelPos, m, ctx, state.angelPower),
       }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
@@ -180,7 +168,7 @@ function minimax(
           { ...state, phase: "angel-thinking" },
           coord
         );
-        const score = minimax(nextState, escapeVector, depth - 1, true);
+        const score = minimax(nextState, ctx, depth - 1, true);
         bestScore = Math.max(bestScore, score);
       } catch {
         continue;
@@ -200,7 +188,11 @@ export function computeAngelMove(
 ): { move: Coord; reasoning: AngelReasoning } {
   const startTime = performance.now();
 
-  const escapeVector = computeEscapeVector(state.grid, state.angelPos);
+  // Precompute shared context once
+  const centroid = computeBlockedCentroid(state.grid);
+  const escapeVector = computeEscapeVector(centroid, state.angelPos);
+  const ctx: ScoringContext = { escapeVector, centroid };
+
   const validMoves = getValidAngelMoves(state);
 
   if (validMoves.length === 0) {
@@ -210,16 +202,9 @@ export function computeAngelMove(
   // Score all candidates statically
   const scored: ScoredMove[] = validMoves.map((coord) => ({
     coord,
-    score: scoreCandidate(
-      state.grid,
-      state.angelPos,
-      coord,
-      escapeVector,
-      state.angelPower
-    ),
+    score: scoreCandidate(state.grid, state.angelPos, coord, ctx, state.angelPower),
   }));
 
-  // Sort by static score descending
   scored.sort((a, b) => b.score - a.score);
 
   // Apply minimax to top candidates if lookahead > 0
@@ -229,13 +214,12 @@ export function computeAngelMove(
     const topCandidates = scored.slice(0, topN);
 
     finalScored = topCandidates.map(({ coord }) => {
-      // Simulate angel moving here, then minimax
       try {
         const nextState = applyAngelMove(
           { ...state, phase: "angel-thinking" },
           coord
         );
-        const score = minimax(nextState, escapeVector, lookaheadDepth, true);
+        const score = minimax(nextState, ctx, lookaheadDepth, true);
         return { coord, score };
       } catch {
         return { coord, score: -Infinity };

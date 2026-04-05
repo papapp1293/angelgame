@@ -1,7 +1,7 @@
 import type { Coord, GameState } from "./types";
 import { createGrid, blockCell, isBlocked } from "./grid";
 import { coordKey, chebyshevDistance, coordsInRange } from "@/lib/math";
-import { DEFAULT_ANGEL_POWER } from "@/lib/constants";
+import { DEFAULT_ANGEL_POWER, GAME } from "@/lib/constants";
 
 export function initGame(angelPower: number = DEFAULT_ANGEL_POWER): GameState {
   return {
@@ -78,17 +78,36 @@ export function applyAngelMove(state: GameState, coord: Coord): GameState {
     throw new Error(`Cannot move to blocked cell ${coordKey(coord)}`);
   }
 
+  const nextTurn = state.turnNumber + 1;
+  const newHistory = [
+    ...state.moveHistory,
+    {
+      devil: getLastDevilMove(state) ?? { x: 0, y: 0 },
+      angel: coord,
+    },
+  ];
+
+  // Cap history to prevent unbounded growth
+  if (newHistory.length > GAME.maxPathRender) {
+    newHistory.splice(0, newHistory.length - GAME.maxPathRender);
+  }
+
+  // Angel survives turn limit — angel wins
+  if (nextTurn >= GAME.defaultTurnLimit) {
+    return {
+      ...state,
+      angelPos: coord,
+      turnNumber: nextTurn,
+      moveHistory: newHistory,
+      phase: "angel-wins",
+    };
+  }
+
   return {
     ...state,
     angelPos: coord,
-    turnNumber: state.turnNumber + 1,
-    moveHistory: [
-      ...state.moveHistory,
-      {
-        devil: getLastDevilMove(state) ?? { x: 0, y: 0 },
-        angel: coord,
-      },
-    ],
+    turnNumber: nextTurn,
+    moveHistory: newHistory,
     phase: "devil-turn",
   };
 }
@@ -102,13 +121,17 @@ function getLastDevilMove(state: GameState): Coord | null {
   return { x, y };
 }
 
-export function checkWinCondition(state: GameState): "devil-wins" | null {
+export function checkWinCondition(state: GameState): "devil-wins" | "angel-wins" | null {
   if (state.phase === "devil-wins") return "devil-wins";
+  if (state.phase === "angel-wins") return "angel-wins";
   if (
     state.phase === "angel-thinking" &&
     getValidAngelMoves(state).length === 0
   ) {
     return "devil-wins";
+  }
+  if (state.turnNumber >= GAME.defaultTurnLimit) {
+    return "angel-wins";
   }
   return null;
 }

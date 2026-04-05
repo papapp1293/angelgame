@@ -8,10 +8,20 @@ import { createGrid, blockCell } from "../grid";
 import { initGame, applyDevilMove } from "../game";
 import type { GameState } from "../types";
 
+/** Helper: compute centroid from grid (mirrors internal logic). */
+function centroidOf(grid: GameState["grid"]): { x: number; y: number } | null {
+  if (grid.size === 0) return null;
+  let cx = 0, cy = 0;
+  for (const key of grid.keys()) {
+    const [x, y] = key.split(",").map(Number);
+    cx += x; cy += y;
+  }
+  return { x: cx / grid.size, y: cy / grid.size };
+}
+
 describe("computeEscapeVector", () => {
   it("returns a default direction on an empty grid", () => {
-    const grid = createGrid();
-    const vec = computeEscapeVector(grid, { x: 0, y: 0 });
+    const vec = computeEscapeVector(null, { x: 0, y: 0 });
     expect(vec.x).toBe(1);
     expect(vec.y).toBe(0);
   });
@@ -20,7 +30,7 @@ describe("computeEscapeVector", () => {
     let grid = createGrid();
     grid = blockCell(grid, { x: -3, y: 0 }); // block to the left
 
-    const vec = computeEscapeVector(grid, { x: 0, y: 0 });
+    const vec = computeEscapeVector(centroidOf(grid), { x: 0, y: 0 });
     // Should point right (away from the block)
     expect(vec.x).toBeGreaterThan(0);
   });
@@ -32,7 +42,7 @@ describe("computeEscapeVector", () => {
     grid = blockCell(grid, { x: 1, y: -3 });
     grid = blockCell(grid, { x: -1, y: -4 });
 
-    const vec = computeEscapeVector(grid, { x: 0, y: 0 });
+    const vec = computeEscapeVector(centroidOf(grid), { x: 0, y: 0 });
     // Centroid is below, so escape should point upward (positive y)
     expect(vec.y).toBeGreaterThan(0);
   });
@@ -43,7 +53,7 @@ describe("computeEscapeVector", () => {
     grid = blockCell(grid, { x: 1, y: 0 });
     grid = blockCell(grid, { x: -1, y: 0 });
 
-    const vec = computeEscapeVector(grid, { x: 0, y: 0 });
+    const vec = computeEscapeVector(centroidOf(grid), { x: 0, y: 0 });
     // Should return fallback direction, not zero
     expect(vec.x !== 0 || vec.y !== 0).toBe(true);
   });
@@ -53,10 +63,11 @@ describe("scoreCandidate", () => {
   it("prefers cells aligned with escape vector", () => {
     const grid = createGrid();
     const angelPos = { x: 0, y: 0 };
-    const escapeVec = { x: 1, y: 0 }; // escape right
+    const escapeVector = { x: 1, y: 0 }; // escape right
+    const ctx = { escapeVector, centroid: null };
 
-    const scoreRight = scoreCandidate(grid, angelPos, { x: 2, y: 0 }, escapeVec, 2);
-    const scoreLeft = scoreCandidate(grid, angelPos, { x: -2, y: 0 }, escapeVec, 2);
+    const scoreRight = scoreCandidate(grid, angelPos, { x: 2, y: 0 }, ctx, 2);
+    const scoreLeft = scoreCandidate(grid, angelPos, { x: -2, y: 0 }, ctx, 2);
 
     expect(scoreRight).toBeGreaterThan(scoreLeft);
   });
@@ -68,10 +79,11 @@ describe("scoreCandidate", () => {
     grid = blockCell(grid, { x: 3, y: -1 });
 
     const angelPos = { x: 0, y: 0 };
-    const escapeVec = { x: 0, y: 1 }; // escape up (neutral for left/right)
+    const escapeVector = { x: 0, y: 1 }; // escape up (neutral for left/right)
+    const ctx = { escapeVector, centroid: centroidOf(grid) };
 
-    const scoreNearBlocks = scoreCandidate(grid, angelPos, { x: 2, y: 0 }, escapeVec, 2);
-    const scoreFarFromBlocks = scoreCandidate(grid, angelPos, { x: -2, y: 0 }, escapeVec, 2);
+    const scoreNearBlocks = scoreCandidate(grid, angelPos, { x: 2, y: 0 }, ctx, 2);
+    const scoreFarFromBlocks = scoreCandidate(grid, angelPos, { x: -2, y: 0 }, ctx, 2);
 
     expect(scoreFarFromBlocks).toBeGreaterThan(scoreNearBlocks);
   });
@@ -84,11 +96,12 @@ describe("scoreCandidate", () => {
     }
 
     const angelPos = { x: 0, y: 0 };
-    const escapeVec = { x: 0, y: 1 };
+    const escapeVector = { x: 0, y: 1 };
+    const ctx = { escapeVector, centroid: centroidOf(grid) };
 
     // Moving away from wall vs toward wall
-    const awayScore = scoreCandidate(grid, angelPos, { x: -2, y: 0 }, escapeVec, 2);
-    const towardScore = scoreCandidate(grid, angelPos, { x: 2, y: 0 }, escapeVec, 2);
+    const awayScore = scoreCandidate(grid, angelPos, { x: -2, y: 0 }, ctx, 2);
+    const towardScore = scoreCandidate(grid, angelPos, { x: 2, y: 0 }, ctx, 2);
 
     expect(awayScore).toBeGreaterThan(towardScore);
   });

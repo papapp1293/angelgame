@@ -11,8 +11,9 @@
 **Step 7: COMPLETE** — AI reasoning sidebar and heatmap visualization  
 **Step 8: COMPLETE** — Visual polish and animations  
 **Step 9: COMPLETE** — Tutorial, onboarding, and game configuration  
-**Step 10: NEXT** — Performance optimization and edge cases  
-Steps 11-12: Not started
+**Step 10: COMPLETE** — Performance optimization and edge cases  
+**Step 11: NEXT** — Landing page, SEO, and portfolio presentation  
+Step 12: Not started
 
 ---
 
@@ -208,8 +209,16 @@ Each step is a self-contained, commit-worthy unit. Start a new window per step.
 - `useWorker.ts` / `useGameLoop.ts`: Pass difficulty through worker protocol
 - `page.tsx`: Added Settings button to header, wired TutorialModal and SettingsPanel
 
-### Step 10: Performance Optimization and Edge Cases
-**Modify:** `angel-strategy.ts`, `GridRenderer.ts`, `game.ts`
+### Step 10: Performance Optimization and Edge Cases ✅
+**Modified:** `angel-strategy.ts`, `GridRenderer.ts`, `game.ts`, `grid.ts`, `danger-map.ts`, `types.ts`, `game-store.ts`, `HUD.tsx`
+
+- `angel-strategy.ts`: Precompute blocked centroid once in `computeAngelMove` and pass via `ScoringContext` to all `scoreCandidate` calls (was recomputing per call). Smarter minimax devil candidate sampling: rank by threat score (proximity + adjacent blocks) instead of arbitrary slice.
+- `grid.ts`: `countBlockedInRange` now checks specific cells for small radii (O(r²)) instead of scanning entire grid (O(n)).
+- `danger-map.ts`: `floodFillFreedom` uses index-based BFS (O(1) dequeue) instead of `queue.shift()` (O(n)). Inlined grid key computation to avoid function call overhead.
+- `game.ts`: Added turn limit — angel wins after 200 turns. Capped `moveHistory` to `maxPathRender` entries to prevent unbounded memory growth.
+- `types.ts`: Added `"angel-wins"` to `GamePhase` union.
+- `GridRenderer.ts`: Batched grid lines into two draw calls (normal + axis) instead of one per line. Generalized `drawWinOverlay` for both devil-wins and angel-wins.
+- `HUD.tsx`, `game-store.ts`: Handle `angel-wins` phase display and `isGameOver` check.
 
 ### Step 11: Landing Page, SEO, and Portfolio Presentation
 **Modify:** `page.tsx`, `layout.tsx`. **Create:** `public/og-image.png`, `README.md`

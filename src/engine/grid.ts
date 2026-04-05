@@ -49,6 +49,20 @@ export function countBlockedInRange(
   center: Coord,
   radius: number
 ): number {
+  // For small radii, check specific cells (O(r²)) rather than scanning entire grid (O(n))
+  const area = (2 * radius + 1) ** 2;
+  if (area <= grid.size) {
+    let count = 0;
+    for (let dx = -radius; dx <= radius; dx++) {
+      for (let dy = -radius; dy <= radius; dy++) {
+        if (grid.has(`${center.x + dx},${center.y + dy}`)) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
   let count = 0;
   for (const [key, state] of grid) {
     if (state === "blocked") {
