@@ -4,8 +4,10 @@
 
 **Step 1: COMPLETE** — Project scaffold, core types, math utilities, vitest, static export  
 **Step 2: COMPLETE** — Sparse grid engine (grid.ts), game logic (game.ts), Zustand store (game-store.ts), 22 new tests  
-**Step 3: NEXT** ��� Canvas grid rendering with pan and zoom  
-Steps 4-12: Not started
+**Step 3: COMPLETE** — Canvas grid rendering with pan and zoom  
+**Step 4: COMPLETE** — Basic game loop with manual angel, HUD  
+**Step 5: NEXT** — Angel AI strategy engine  
+Steps 6-12: Not started
 
 ---
 

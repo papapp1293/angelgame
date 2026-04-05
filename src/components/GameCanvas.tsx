@@ -3,6 +3,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import { useCanvas } from "@/hooks/useCanvas";
 import { useGameStore } from "@/store/game-store";
+import { useGameLoop } from "@/hooks/useGameLoop";
 import {
   render,
   screenToGridCoord,
@@ -15,6 +16,7 @@ const MAX_ZOOM = 4;
 const ZOOM_SENSITIVITY = 0.001;
 
 export default function GameCanvas() {
+  const { handleCellClick } = useGameLoop("manual");
   const { canvasRef, size } = useCanvas();
   const vpRef = useRef<Viewport>({ offsetX: 0, offsetY: 0, zoom: 1 });
   const hoverRef = useRef<{ x: number; y: number } | null>(null);
@@ -114,23 +116,14 @@ export default function GameCanvas() {
 
       if (wasDrag) return;
 
-      // Click: place devil block
+      // Click: delegate to game loop (handles both devil and angel turns)
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
       const cell = screenToGridCoord(mx, my, vpRef.current);
-
-      const store = useGameStore.getState();
-      if (store.phase === "devil-turn") {
-        const isAngel = cell.x === store.angelPos.x && cell.y === store.angelPos.y;
-        const key = `${cell.x},${cell.y}`;
-        const isBlocked = store.grid.has(key);
-        if (!isAngel && !isBlocked) {
-          store.devilMove(cell);
-        }
-      }
+      handleCellClick(cell);
     },
     [canvasRef]
   );
