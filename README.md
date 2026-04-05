@@ -71,7 +71,3 @@ src/
 ├── hooks/         # Canvas, game loop, worker lifecycle
 └── lib/           # Constants, math utilities
 ```
-
-## License
-
-MIT
