@@ -9,8 +9,9 @@
 **Step 5: COMPLETE** — Angel AI strategy engine  
 **Step 6: COMPLETE** — Web Worker integration  
 **Step 7: COMPLETE** — AI reasoning sidebar and heatmap visualization  
-**Step 8: NEXT** — Visual polish and animations  
-Steps 9-12: Not started
+**Step 8: COMPLETE** — Visual polish and animations  
+**Step 9: NEXT** — Tutorial, onboarding, and game configuration  
+Steps 10-12: Not started
 
 ---
 
@@ -178,8 +179,21 @@ Each step is a self-contained, commit-worthy unit. Start a new window per step.
 - `HUD.tsx`: Updated angel-thinking label for AI mode
 - `tsconfig.json`: Excluded `out/` from type checking (worker output has unresolvable imports)
 
-### Step 8: Visual Polish and Animations
-**Modify:** `GridRenderer.ts`, `GameCanvas.tsx`, `globals.css`, `constants.ts`
+### Step 8: Visual Polish and Animations ✅
+**Modified:** `GridRenderer.ts`, `GameCanvas.tsx`, `globals.css`, `constants.ts`
+
+- Continuous animation loop (requestAnimationFrame) replaces on-demand rendering
+- Angel move animation: smooth ease-out-cubic lerp from previous to new position
+- Block placement flash: brief scale + red glow on newly placed blocks
+- Pulsing angel glow: breathing sine-wave effect on the outer glow ring
+- Angel inner highlight: subtle white specular for depth
+- Rounded corners on all cells (blocked, reachable, hover, heatmap)
+- Blocked cells: two-tone (outer + inner shadow) for depth
+- Origin marker: subtle highlight at (0,0) grid cell
+- Axis-highlighted grid lines: brighter lines for x=0 and y=0
+- Devil-wins overlay: dark scrim + green banner with reset prompt
+- CSS: custom scrollbar, selection color, smooth panel transitions
+- New constants: `gridLineAxis`, `blockedInner`, `blockedFlash`, `angelGlowStrong`, `origin`, `glowPulseSpeed`
 
 ### Step 9: Tutorial, Onboarding, and Game Configuration
 **Create:** `src/components/TutorialModal.tsx`, `src/components/SettingsPanel.tsx`
