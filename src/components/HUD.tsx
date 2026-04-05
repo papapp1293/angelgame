@@ -6,7 +6,7 @@ import type { GamePhase } from "@/engine/types";
 const PHASE_LABEL: Record<GamePhase, string> = {
   idle: "Idle",
   "devil-turn": "Your turn — click a cell to block",
-  "angel-thinking": "Angel's turn — click a reachable cell",
+  "angel-thinking": "Angel is thinking...",
   "angel-moved": "Angel moved",
   "devil-wins": "You win! The angel is trapped",
 };

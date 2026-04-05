@@ -8,8 +8,9 @@
 **Step 4: COMPLETE** — Basic game loop with manual angel, HUD  
 **Step 5: COMPLETE** — Angel AI strategy engine  
 **Step 6: COMPLETE** — Web Worker integration  
-**Step 7: NEXT** — AI reasoning sidebar and heatmap visualization  
-Steps 8-12: Not started
+**Step 7: COMPLETE** — AI reasoning sidebar and heatmap visualization  
+**Step 8: NEXT** — Visual polish and animations  
+Steps 9-12: Not started
 
 ---
 
@@ -165,8 +166,17 @@ Each step is a self-contained, commit-worthy unit. Start a new window per step.
 - `useGameLoop.ts`: Updated to dispatch to worker when `mode === "ai"` and `phase === "angel-thinking"`, applies result via store.
 - `GameCanvas.tsx`: Switched from `"manual"` to `"ai"` mode — angel now moves automatically after each devil click.
 
-### Step 7: AI Reasoning Sidebar and Heatmap Visualization
-**Create:** `src/components/Sidebar.tsx`, `src/components/Heatmap.tsx`, `src/components/PathOverlay.ts`
+### Step 7: AI Reasoning Sidebar and Heatmap Visualization ✅
+**Created:** `src/components/Sidebar.tsx`, `src/components/Heatmap.tsx`, `src/components/PathOverlay.ts`
+
+- `Sidebar.tsx`: Displays AI reasoning — compute time, lookahead depth, escape vector, top 6 scored candidates, danger map summary (cell count, min/max danger)
+- `Heatmap.tsx`: Toggle button for danger heatmap overlay on canvas. Disabled when no danger data available.
+- `PathOverlay.ts`: Draws angel path history as a connected trail with fading dots on canvas
+- `GridRenderer.ts`: Extended `RenderState` with `moveHistory`, `showHeatmap`, `dangerMap`. Added `drawDangerHeatmap()` with 3-tier color interpolation (green/yellow/red)
+- `GameCanvas.tsx`: Accepts `showHeatmap` prop, passes full render state including path and heatmap data
+- `page.tsx`: New layout with sidebar on right, heatmap toggle in header, canvas fills remaining space
+- `HUD.tsx`: Updated angel-thinking label for AI mode
+- `tsconfig.json`: Excluded `out/` from type checking (worker output has unresolvable imports)
 
 ### Step 8: Visual Polish and Animations
 **Modify:** `GridRenderer.ts`, `GameCanvas.tsx`, `globals.css`, `constants.ts`

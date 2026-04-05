@@ -1,6 +1,7 @@
-import type { Coord, SparseGrid } from "@/engine/types";
+import type { Coord, SparseGrid, MoveRecord } from "@/engine/types";
 import { COLORS, CELL_SIZE } from "@/lib/constants";
 import { chebyshevDistance } from "@/lib/math";
+import { drawPathOverlay } from "./PathOverlay";
 
 export interface Viewport {
   /** Pan offset in pixels (screen-space) */
@@ -10,12 +11,20 @@ export interface Viewport {
   zoom: number;
 }
 
+export interface DangerEntry {
+  coord: Coord;
+  danger: number;
+}
+
 export interface RenderState {
   grid: SparseGrid;
   angelPos: Coord;
   angelPower: number;
   phase: string;
   hoverCell: Coord | null;
+  moveHistory: MoveRecord[];
+  showHeatmap: boolean;
+  dangerMap: DangerEntry[];
 }
 
 /** Convert grid coord to screen pixel (top-left of cell). */
@@ -89,6 +98,16 @@ export function render(
 
   // Blocked cells
   drawBlockedCells(ctx, vp, state.grid, canvasW, canvasH, cellPx);
+
+  // Danger heatmap overlay
+  if (state.showHeatmap && state.dangerMap.length > 0) {
+    drawDangerHeatmap(ctx, vp, state.dangerMap, cellPx);
+  }
+
+  // Path overlay
+  if (state.moveHistory.length > 0) {
+    drawPathOverlay(ctx, vp, state.moveHistory, state.angelPos, 100);
+  }
 
   // Hover cell
   if (state.hoverCell) {
@@ -196,6 +215,36 @@ function drawHoverCell(
     // Valid angel target: brighter reachable
     ctx.fillStyle = COLORS.reachableHover;
     const { sx, sy } = gridToScreen(cell, vp);
+    ctx.fillRect(sx + 1, sy + 1, cellPx - 2, cellPx - 2);
+  }
+}
+
+function drawDangerHeatmap(
+  ctx: CanvasRenderingContext2D,
+  vp: Viewport,
+  dangerMap: DangerEntry[],
+  cellPx: number
+) {
+  if (dangerMap.length === 0) return;
+
+  const maxDanger = Math.max(...dangerMap.map((d) => d.danger));
+  if (maxDanger === 0) return;
+
+  for (const { coord, danger } of dangerMap) {
+    const t = danger / maxDanger; // 0 = safe, 1 = max danger
+    const { sx, sy } = gridToScreen(coord, vp);
+
+    // Interpolate green → yellow → red
+    let color: string;
+    if (t < 0.33) {
+      color = COLORS.dangerLow;
+    } else if (t < 0.66) {
+      color = COLORS.dangerMid;
+    } else {
+      color = COLORS.dangerHigh;
+    }
+
+    ctx.fillStyle = color;
     ctx.fillRect(sx + 1, sy + 1, cellPx - 2, cellPx - 2);
   }
 }

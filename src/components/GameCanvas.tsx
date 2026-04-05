@@ -15,13 +15,19 @@ const MIN_ZOOM = 0.2;
 const MAX_ZOOM = 4;
 const ZOOM_SENSITIVITY = 0.001;
 
-export default function GameCanvas() {
+interface GameCanvasProps {
+  showHeatmap?: boolean;
+}
+
+export default function GameCanvas({ showHeatmap = false }: GameCanvasProps) {
   const { handleCellClick } = useGameLoop("ai");
   const { canvasRef, size } = useCanvas();
   const vpRef = useRef<Viewport>({ offsetX: 0, offsetY: 0, zoom: 1 });
   const hoverRef = useRef<{ x: number; y: number } | null>(null);
   const dragRef = useRef<{ startX: number; startY: number; startOX: number; startOY: number } | null>(null);
   const rafRef = useRef<number>(0);
+  const showHeatmapRef = useRef(showHeatmap);
+  showHeatmapRef.current = showHeatmap;
 
   // Center viewport on mount and when size changes
   useEffect(() => {
@@ -44,12 +50,16 @@ export default function GameCanvas() {
       if (!ctx) return;
 
       const state = useGameStore.getState();
+      const reasoning = state.reasoning;
       const renderState: RenderState = {
         grid: state.grid,
         angelPos: state.angelPos,
         angelPower: state.angelPower,
         phase: state.phase,
         hoverCell: hoverRef.current,
+        moveHistory: state.moveHistory,
+        showHeatmap: showHeatmapRef.current,
+        dangerMap: reasoning?.dangerMap ?? [],
       };
 
       ctx.save();
@@ -59,12 +69,17 @@ export default function GameCanvas() {
     });
   }, [canvasRef, size]);
 
-  // Re-render when store changes
+  // Re-render when store changes or heatmap toggles
   useEffect(() => {
     const unsub = useGameStore.subscribe(() => requestRender());
     requestRender();
     return unsub;
   }, [requestRender]);
+
+  // Re-render when heatmap toggle changes
+  useEffect(() => {
+    requestRender();
+  }, [showHeatmap, requestRender]);
 
   // Mouse handlers
   const handleMouseDown = useCallback(
