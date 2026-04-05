@@ -16,7 +16,7 @@ const MAX_ZOOM = 4;
 const ZOOM_SENSITIVITY = 0.001;
 
 export default function GameCanvas() {
-  const { handleCellClick } = useGameLoop("manual");
+  const { handleCellClick } = useGameLoop("ai");
   const { canvasRef, size } = useCanvas();
   const vpRef = useRef<Viewport>({ offsetX: 0, offsetY: 0, zoom: 1 });
   const hoverRef = useRef<{ x: number; y: number } | null>(null);

@@ -6,8 +6,10 @@
 **Step 2: COMPLETE** — Sparse grid engine (grid.ts), game logic (game.ts), Zustand store (game-store.ts), 22 new tests  
 **Step 3: COMPLETE** — Canvas grid rendering with pan and zoom  
 **Step 4: COMPLETE** — Basic game loop with manual angel, HUD  
-**Step 5: NEXT** — Angel AI strategy engine  
-Steps 6-12: Not started
+**Step 5: COMPLETE** — Angel AI strategy engine  
+**Step 6: COMPLETE** — Web Worker integration  
+**Step 7: NEXT** — AI reasoning sidebar and heatmap visualization  
+Steps 8-12: Not started
 
 ---
 
@@ -147,11 +149,21 @@ Each step is a self-contained, commit-worthy unit. Start a new window per step.
 ### Step 4: Basic Game Loop (Manual Angel for Testing)
 **Create:** `src/hooks/useGameLoop.ts`, `src/components/HUD.tsx`
 
-### Step 5: Angel AI Strategy Engine
-**Create:** `src/engine/angel-strategy.ts`, `src/engine/danger-map.ts`
+### Step 5: Angel AI Strategy Engine ✅
+**Created:** `src/engine/angel-strategy.ts`, `src/engine/danger-map.ts`, `src/engine/__tests__/angel-strategy.test.ts`, `src/engine/__tests__/danger-map.test.ts`
 
-### Step 6: Web Worker Integration
-**Create:** `src/engine/worker.ts`, `src/hooks/useWorker.ts`
+- `danger-map.ts`: `cellDanger()` (weighted: blocked neighbors, density, confinement, anti-escape), `computeDangerMap()` (all reachable cells), `floodFillFreedom()` (BFS open-cell count)
+- `angel-strategy.ts`: `computeEscapeVector()` (away from blocked centroid), `scoreCandidate()` (alignment + freedom + local danger + centroid distance), `computeAngelMove()` (static scoring + optional minimax lookahead depth 0-2)
+
+**Tests:** 23 new tests — escape vector direction, candidate scoring preferences, full move computation, lookahead, edge cases
+
+### Step 6: Web Worker Integration ✅
+**Created:** `src/engine/worker.ts`, `src/hooks/useWorker.ts`
+
+- `worker.ts`: Receives serialized game state, reconstructs grid, runs `computeAngelMove()`, posts back move + reasoning. Auto-scales lookahead depth based on block count.
+- `useWorker.ts`: React hook managing Worker lifecycle (create on mount, terminate on unmount), serializes grid Map for transfer, tracks busy state.
+- `useGameLoop.ts`: Updated to dispatch to worker when `mode === "ai"` and `phase === "angel-thinking"`, applies result via store.
+- `GameCanvas.tsx`: Switched from `"manual"` to `"ai"` mode — angel now moves automatically after each devil click.
 
 ### Step 7: AI Reasoning Sidebar and Heatmap Visualization
 **Create:** `src/components/Sidebar.tsx`, `src/components/Heatmap.tsx`, `src/components/PathOverlay.ts`

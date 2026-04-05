@@ -2,7 +2,8 @@
 
 import { useEffect, useCallback } from "react";
 import { useGameStore } from "@/store/game-store";
-import type { Coord } from "@/engine/types";
+import { useWorker } from "@/hooks/useWorker";
+import type { Coord, WorkerResponse } from "@/engine/types";
 import { chebyshevDistance } from "@/lib/math";
 
 type AngelMode = "manual" | "ai";
@@ -13,13 +14,21 @@ export function useGameLoop(mode: AngelMode = "manual") {
   const angelPower = useGameStore((s) => s.angelPower);
   const grid = useGameStore((s) => s.grid);
 
-  // In AI mode, this is where we'd dispatch to the worker.
-  // For now, manual mode requires no auto-dispatch.
+  const onWorkerResult = useCallback((response: WorkerResponse) => {
+    if (response.type === "move-result") {
+      useGameStore.getState().angelMove(response.move, response.reasoning);
+    }
+  }, []);
+
+  const { requestMove } = useWorker(onWorkerResult);
+
+  // In AI mode, dispatch to worker when it's the angel's turn
   useEffect(() => {
     if (mode === "ai" && phase === "angel-thinking") {
-      // TODO Step 6: send state to Web Worker, receive move, call angelMove
+      const s = useGameStore.getState();
+      requestMove(s.grid, s.angelPos, s.angelPower, s.turnNumber);
     }
-  }, [mode, phase]);
+  }, [mode, phase, requestMove]);
 
   const handleCellClick = useCallback(
     (cell: Coord) => {
