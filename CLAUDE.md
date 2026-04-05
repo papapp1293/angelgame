@@ -12,8 +12,7 @@
 **Step 8: COMPLETE** — Visual polish and animations  
 **Step 9: COMPLETE** — Tutorial, onboarding, and game configuration  
 **Step 10: COMPLETE** — Performance optimization and edge cases  
-**Step 11: NEXT** — Landing page, SEO, and portfolio presentation  
-Step 12: Not started
+**Step 11: NEXT** — Landing page, SEO, and README
 
 ---
 
@@ -23,7 +22,7 @@ A visual implementation of Conway's Angel Problem: on an infinite 2D grid, the A
 
 **Stack:** Next.js 15 (App Router, static export), TypeScript (strict), HTML5 Canvas, Zustand, Web Worker, Tailwind CSS, Framer Motion (UI panels only), Vitest.
 
-**Deployment target:** Vercel static site with a shareable demo URL.
+**Deployment:** Client-only static export. Can be embedded directly into an existing website or served standalone.
 
 ---
 
@@ -77,7 +76,7 @@ angelgame/
 ## Architectural Decisions
 
 ### 1. Client-Only (No Backend)
-The AI runs entirely in-browser via a Web Worker. No server, no WebSocket, no CORS. Static export to Vercel. This keeps deployment trivial and latency zero.
+The AI runs entirely in-browser via a Web Worker. No server, no WebSocket, no CORS. Static export can be embedded directly into an existing site or served standalone.
 
 ### 2. Sparse Grid (Map, not Array)
 `Map<string, CellState>` keyed by `"x,y"` strings. Only blocked cells are stored — everything else is implicitly empty. Memory is proportional to devil moves, not grid area. Any coordinate is valid (truly infinite).
@@ -99,7 +98,8 @@ Three layers:
 type Coord = { x: number; y: number };
 type CellState = "blocked";
 type SparseGrid = Map<string, CellState>;
-type GamePhase = 'idle' | 'devil-turn' | 'angel-thinking' | 'angel-moved' | 'devil-wins';
+type GamePhase = 'idle' | 'devil-turn' | 'angel-thinking' | 'angel-moved' | 'devil-wins' | 'angel-wins';
+type Difficulty = 'easy' | 'medium' | 'hard';
 
 interface GameState {
   grid: SparseGrid;
@@ -220,10 +220,10 @@ Each step is a self-contained, commit-worthy unit. Start a new window per step.
 - `GridRenderer.ts`: Batched grid lines into two draw calls (normal + axis) instead of one per line. Generalized `drawWinOverlay` for both devil-wins and angel-wins.
 - `HUD.tsx`, `game-store.ts`: Handle `angel-wins` phase display and `isGameOver` check.
 
-### Step 11: Landing Page, SEO, and Portfolio Presentation
+### Step 11: Landing Page, SEO, and README
 **Modify:** `page.tsx`, `layout.tsx`. **Create:** `public/og-image.png`, `README.md`
 
-### Step 12: Deployment, Final Testing, and Polish
+Polish the landing page layout, add Open Graph metadata for social sharing, and write a README covering the project, how to run it, and how to embed the static export into another site.
 
 ---
 
@@ -242,7 +242,7 @@ Step 1 (scaffold) → Step 2 (engine) → Step 3 (canvas) → Step 4 (game loop)
                                                    │
                          Step 10 (perf) ──────────→┤
                                                    │
-                         Step 11 (landing) → Step 12 (deploy)
+                         Step 11 (landing/README) ─┘
 ```
 
 ## Known Risks
